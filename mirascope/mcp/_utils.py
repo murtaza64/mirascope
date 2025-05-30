@@ -38,7 +38,12 @@ def create_tool_call(
     """
 
     async def call(self: BaseTool) -> list[str | ImageContent | EmbeddedResource]:
-        result = await call_tool(name, self.args)  # pyright: ignore [reportOptionalCall]
+        args = {
+            k: v for k, v in self.args.items()
+            if v is not None
+            or self.model_fields[k].is_required()
+        }
+        result = await call_tool(name, args)  # pyright: ignore [reportOptionalCall]
         if result.isError:
             raise RuntimeError(f"MCP Server returned error: {self._name()}")
         return [
